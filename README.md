@@ -67,4 +67,4 @@ python app.py
 ## 🌟 Get Started Today!
 Discover new music that matches your taste perfectly! 🎧✨
 
-        Too many current requests. Your queue position is 1. Please wait for a while or switch to other models for a smoother experience.
+ 
