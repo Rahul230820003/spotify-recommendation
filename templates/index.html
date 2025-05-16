@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Music Recommender</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #121212;
+            color: #ffffff;
+        }
+        h1, h2, h3 {
+            color: #1DB954;
+            text-align: center;
+        }
+        .container {
+            background-color: #282828;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .flex-container {
+            display: flex;
+            flex-direction: column;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        @media (min-width: 768px) {
+            .flex-container {
+                max-width: 1200px;
+            }
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="range"] {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            background-color: #333;
+            color: white;
+            border: 1px solid #555;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #1DB954;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #1ed760;
+        }
+        #recommendations {
+            margin-top: 20px;
+        }
+        .song-card {
+            background-color: #333333;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+        .song-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        .value-display {
+            float: right;
+            font-weight: bold;
+        }
+        .recommendation-method {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #333;
+            border-radius: 8px;
+        }
+        .song-title {
+            font-size: 18px;
+            margin-bottom: 8px;
+            color: #1DB954;
+        }
+        .song-info {
+            margin-bottom: 5px;
+        }
+        .loading {
+            text-align: center;
+            margin: 20px 0;
+            display: none;
+        }
+        .loading:after {
+            content: " .";
+            animation: dots 1.5s steps(5, end) infinite;
+        }
+        @keyframes dots {
+            0%, 20% { content: " ."; }
+            40% { content: " .."; }
+            60% { content: " ..."; }
+            80%, 100% { content: " ...."; }
+        }
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 15px;
+            }
+            h1 {
+                font-size: 24px;
+            }
+            h2 {
+                font-size: 20px;
+            }
+            h3 {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Spotify Music Recommender</h1>
+    
+    <div class="flex-container">
+        <div class="container">
+            <h2>Find Similar Songs</h2>
+            
+            <div class="recommendation-method">
+                <h3>Recommend by Song Name</h3>
+                <form id="songNameForm">
+                    <label for="songName">Enter a song name:</label>
+                    <input type="text" id="songName" name="songName" placeholder="Enter song name...">
+                    <button type="button" onclick="recommendBySong()">Get Recommendations</button>
+                </form>
+            </div>
+            
+            <div class="recommendation-method">
+                <h3>Recommend by Audio Features</h3>
+                <form id="recommendForm">
+                    <div>
+                        <label for="danceability">Danceability: <span id="danceabilityValue" class="value-display">0.5</span></label>
+                        <input type="range" id="danceability" name="danceability" min="0" max="1" step="0.01" value="0.5" oninput="updateValue('danceability')">
+                    </div>
+                    
+                    <div>
+                        <label for="energy">Energy: <span id="energyValue" class="value-display">0.5</span></label>
+                        <input type="range" id="energy" name="energy" min="0" max="1" step="0.01" value="0.5" oninput="updateValue('energy')">
+                    </div>
+                    
+                    <div>
+                        <label for="speechiness">Speechiness: <span id="speechinessValue" class="value-display">0.05</span></label>
+                        <input type="range" id="speechiness" name="speechiness" min="0" max="1" step="0.01" value="0.05" oninput="updateValue('speechiness')">
+                    </div>
+                    
+                    <div>
+                        <label for="acousticness">Acousticness: <span id="acousticnessValue" class="value-display">0.5</span></label>
+                        <input type="range" id="acousticness" name="acousticness" min="0" max="1" step="0.01" value="0.5" oninput="updateValue('acousticness')">
+                    </div>
+                    
+                    <div>
+                        <label for="instrumentalness">Instrumentalness: <span id="instrumentalnessValue" class="value-display">0.0</span></label>
+                        <input type="range" id="instrumentalness" name="instrumentalness" min="0" max="1" step="0.01" value="0.0" oninput="updateValue('instrumentalness')">
+                    </div>
+                    
+                    <div>
+                        <label for="liveness">Liveness: <span id="livenessValue" class="value-display">0.1</span></label>
+                        <input type="range" id="liveness" name="liveness" min="0" max="1" step="0.01" value="0.1" oninput="updateValue('liveness')">
+                    </div>
+                    
+                    <div>
+                        <label for="valence">Valence (Positivity): <span id="valenceValue" class="value-display">0.5</span></label>
+                        <input type="range" id="valence" name="valence" min="0" max="1" step="0.01" value="0.5" oninput="updateValue('valence')">
+                    </div>
+                    
+                    <div>
+                        <label for="tempo">Tempo (BPM): <span id="tempoValue" class="value-display">120</span></label>
+                        <input type="range" id="tempo" name="tempo" min="60" max="200" step="1" value="120" oninput="updateValue('tempo')">
+                    </div>
+                    
+                    <button type="button" onclick="getRecommendations()">Get Recommendations</button>
+                </form>
+            </div>
+            
+            <div id="loading" class="loading">Finding top songs</div>
+            <div id="recommendations"></div>
+        </div>
+    </div>
+    
+    <script>
+        function updateValue(id) {
+            const slider = document.getElementById(id);
+            const display = document.getElementById(id + 'Value');
+            display.textContent = slider.value;
+        }
+        
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('recommendations').innerHTML = '';
+        }
+        
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+        
+        function recommendBySong() {
+            const songName = document.getElementById('songName').value.trim();
+            
+            if (!songName) {
+                alert('Please enter a song name');
+                return;
+            }
+            
+            showLoading();
+            
+            fetch('/recommend_by_song', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ song_name: songName })
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                if (data.status === 'success') {
+                    displayRecommendations(data.recommendations);
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                console.error('Error:', error);
+                alert('An error occurred while fetching recommendations.');
+            });
+        }
+        
+        function getRecommendations() {
+            const form = document.getElementById('recommendForm');
+            const formData = new FormData(form);
+            const data = {};
+            
+            for (const [key, value] of formData.entries()) {
+                data[key] = parseFloat(value);
+            }
+            
+            showLoading();
+            
+            fetch('/recommend', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                if (data.status === 'success') {
+                    displayRecommendations(data.recommendations);
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                console.error('Error:', error);
+                alert('An error occurred while fetching recommendations.');
+            });
+        }
+        
+        function displayRecommendations(recommendations) {
+            const container = document.getElementById('recommendations');
+            container.innerHTML = '<h3>Top 5 Recommended Songs:</h3>';
+            
+            recommendations.forEach((song, index) => {
+                // Calculate a fake match score (would be better if provided by backend)
+                const matchScore = 100 - (index * 5);
+                
+                // Determine key features (this is simplified - ideally from backend)
+                const keyFeatures = [];
+                if (song.name.includes('Dance') || song.genre === 'dance') keyFeatures.push('danceability');
+                if (song.genre === 'rock') keyFeatures.push('energy');
+                if (song.genre === 'rap') keyFeatures.push('speechiness');
+                
+                const songCard = document.createElement('div');
+                songCard.className = 'song-card';
+                songCard.innerHTML = `
+                    <div class="song-title">
+                        ${song.name}
+                        <span class="match-score">${matchScore}% match</span>
+                    </div>
+                    <div class="song-info"><strong>Artist:</strong> ${song.artist}</div>
+                    <div class="song-info"><strong>Album:</strong> ${song.album || 'N/A'}</div>
+                    <div class="song-info"><strong>Genre:</strong> ${song.genre || 'N/A'}</div>
+                    <div class="song-info"><strong>Popularity:</strong> ${song.popularity ? song.popularity + '/100' : 'N/A'}</div>
+                    <div class="feature-match">
+                        ${keyFeatures.map(feature => `<span class="feature-tag high">${feature}</span>`).join('')}
+                    </div>
+                `;
+                container.appendChild(songCard);
+            });
+        }
+        
+        function rateSong(songName, isGood) {
+            // Send rating to backend
+            fetch('/rate_song', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    song_name: songName,
+                    rating: isGood ? 1 : 0
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('Thanks for your feedback!');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+    
+    <style>
+        .song-card {
+            background-color: #333333;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+        .song-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        .value-display {
+            float: right;
+            font-weight: bold;
+        }
+        .recommendation-method {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #333;
+            border-radius: 8px;
+        }
+        .song-title {
+            font-size: 18px;
+            margin-bottom: 8px;
+            color: #1DB954;
+        }
+        .song-info {
+            margin-bottom: 5px;
+        }
+        .match-score {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-left: 10px;
+            background-color: #1DB954;
+        }
+        .feature-match {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 10px;
+            gap: 5px;
+        }
+        .feature-tag {
+            background-color: #444;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+        .feature-tag.high {
+            border-left: 3px solid #1DB954;
+        }
+    </style>
+</body>
+</html>
