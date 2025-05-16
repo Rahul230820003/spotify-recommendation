@@ -57,15 +57,10 @@ python app.py
 - Mobile application development 📱
 - Expanded dataset for more diverse recommendations 🌍
 
-## 📜 License
-[MIT License](https://opensource.org/licenses/MIT) ⚖️
 
-## 👥 Contributors
-- Your Name/Team 👨‍💻
 
-## 🙏 Acknowledgments
-- Spotify for providing the audio features data 🎵
-- The open-source community for the tools and libraries used 💖
+
+
 
 ---
 
